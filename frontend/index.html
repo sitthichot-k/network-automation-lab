@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Cisco Network Automation</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 50px auto;
+        }
+
+        h1 {
+            color: #38bdf8;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background: #334155;
+            color: white;
+            font-size: 16px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            background: #64748b;
+            cursor: not-allowed;
+        }
+
+        pre {
+            background: #020617;
+            color: #22c55e;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 250px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .status {
+            margin-top: 15px;
+            color: #94a3b8;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>🌐 Cisco Network Automation</h1>
+
+    <div class="card">
+
+        <label for="routerIp">
+            Router IP Address
+        </label>
+
+        <input
+            id="routerIp"
+            type="text"
+            placeholder="192.168.193.133"
+            value="192.168.193.133"
+        >
+
+
+        <label for="command">
+            Router Command
+        </label>
+
+        <input
+            id="command"
+            type="text"
+            placeholder="show ip interface brief"
+            value="show ip interface brief"
+        >
+
+
+        <button
+            id="executeButton"
+            onclick="executeCommand()"
+        >
+            Execute
+        </button>
+
+        <div
+            id="status"
+            class="status"
+        >
+            Ready
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>Router Output</h2>
+
+        <pre id="output">No command executed yet.</pre>
+
+    </div>
+
+</div>
+
+
+<script>
+
+async function executeCommand() {
+
+    const routerIp =
+        document.getElementById("routerIp").value.trim();
+
+    const command =
+        document.getElementById("command").value.trim();
+
+    const output =
+        document.getElementById("output");
+
+    const status =
+        document.getElementById("status");
+
+    const button =
+        document.getElementById("executeButton");
+
+
+    if (!routerIp) {
+
+        output.textContent =
+            "Please enter router IP address.";
+
+        return;
+    }
+
+
+    if (!command) {
+
+        output.textContent =
+            "Please enter a router command.";
+
+        return;
+    }
+
+
+    button.disabled = true;
+
+    status.textContent =
+        "Connecting to router...";
+
+    output.textContent =
+        "Executing command...";
+
+
+    try {
+
+        const response = await fetch(
+            "/api/execute",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    router_ip: routerIp,
+                    command: command
+                })
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            output.textContent =
+                "ERROR:\n\n" +
+                data.detail;
+
+            status.textContent =
+                "Command failed";
+
+            return;
+        }
+
+
+        output.textContent =
+            data.output;
+
+        status.textContent =
+            "Command completed successfully";
+
+    }
+
+    catch (error) {
+
+        output.textContent =
+            "Frontend error:\n\n" +
+            error;
+
+        status.textContent =
+            "Request failed";
+
+    }
+
+    finally {
+
+        button.disabled = false;
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>
